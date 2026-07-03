@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Deals - Steam</title>
+    <title>GAME_DEALS.EXE</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
@@ -13,23 +13,23 @@
 
         <header class="header">
             <div>
-                <h1><span>Game</span> Deals</h1>
-                <p class="stats"><strong>{{ games|length }}</strong> ofertas encontradas</p>
+                <h1><span>GAME_DEALS</span>.EXE</h1>
+                <p class="stats"><strong>{{ games|length }}</strong> deals detected</p>
             </div>
-            <a href="{{ url_for('refresh') }}" class="refresh-btn">↻ Actualizar datos</a>
+            <a href="{{ url_for('refresh') }}" class="refresh-btn">Rescan</a>
         </header>
 
         <section class="filters">
-            <p class="filters-title">Filtros</p>
+            <p class="filters-title">Search parameters</p>
             <form method="get" action="/">
                 <div class="filters-grid">
                     <div class="field filter-field">
                         <div class="filter-header">
-                            <span class="filter-label">Género</span>
+                            <span class="filter-label">Genre</span>
                         </div>
                         <div class="filter-body">
                             <select name="genre" id="genre">
-                                <option value="">Todos</option>
+                                <option value="">All</option>
                                 <option value="Action" {% if genre == "Action" %}selected{% endif %}>Action</option>
                                 <option value="RPG" {% if genre == "RPG" %}selected{% endif %}>RPG</option>
                                 <option value="Indie" {% if genre == "Indie" %}selected{% endif %}>Indie</option>
@@ -44,8 +44,8 @@
                     </div>
                     <div class="field filter-field">
                         <div class="filter-header">
-                            <span class="filter-label">Precio máximo</span>
-                            <span id="max_price_display" class="filter-chip filter-chip--price">Sin límite</span>
+                            <span class="filter-label">Max price</span>
+                            <span id="max_price_display" class="filter-chip filter-chip--price">No limit</span>
                         </div>
                         <div class="filter-body">
                             <input type="range" id="max_price_slider" class="range-input range-input--price"
@@ -61,8 +61,8 @@
                     </div>
                     <div class="field filter-field">
                         <div class="filter-header">
-                            <span class="filter-label">Descuento mínimo</span>
-                            <span id="min_discount_display" class="filter-chip filter-chip--deal">Cualquiera</span>
+                            <span class="filter-label">Min discount</span>
+                            <span id="min_discount_display" class="filter-chip filter-chip--deal">Any</span>
                         </div>
                         <div class="filter-body">
                             <input type="range" id="min_discount_slider" class="range-input range-input--discount"
@@ -76,7 +76,7 @@
                         <input type="hidden" name="min_discount" id="min_discount"
                             value="{{ min_discount if min_discount is not none else '' }}">
                     </div>
-                    <button type="submit" class="filter-btn">Filtrar</button>
+                    <button type="submit" class="filter-btn">Run</button>
                 </div>
             </form>
         </section>
@@ -86,11 +86,11 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Juego</th>
-                        <th>Género</th>
-                        <th>Descuento</th>
-                        <th>Precio original</th>
-                        <th>Precio final</th>
+                        <th>Game</th>
+                        <th>Genre</th>
+                        <th>Discount</th>
+                        <th>Original price</th>
+                        <th>Final price</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -99,7 +99,7 @@
                         <td>
                             <a href="{{ game.url }}" target="_blank" class="game-link">{{ game.title }}</a>
                             {% if game.is_best_deal %}
-                            <span class="badge">Buena oferta</span>
+                            <span class="badge">Best deal</span>
                             {% endif %}
                         </td>
                         <td class="genres">{{ game.genres | join(", ") or "—" }}</td>
@@ -111,13 +111,28 @@
                 </tbody>
             </table>
             {% else %}
-            <p class="empty">No hay juegos que coincidan con los filtros.</p>
+            <p class="empty">No results for these parameters</p>
             {% endif %}
         </div>
 
     </div>
 
+    <div id="scrape-modal" class="scrape-modal{% if not needs_scrape %} scrape-modal--hidden{% endif %}"
+        role="dialog" aria-modal="true" aria-labelledby="scrape-title">
+        <div class="scrape-modal__backdrop"></div>
+        <div class="scrape-modal__box">
+            <h2 id="scrape-title" class="scrape-modal__title">Scanning Steam</h2>
+            <p id="scrape-message" class="scrape-modal__message">Connecting to Steam...</p>
+            <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div id="scrape-progress-fill" class="progress-bar__fill"></div>
+            </div>
+            <p id="scrape-percent" class="scrape-modal__percent">0%</p>
+            <p class="scrape-modal__hint">Estimated time: 30–60 seconds. Do not close this page.</p>
+        </div>
+    </div>
+
     <script>
+        const NEEDS_SCRAPE = {{ needs_scrape | tojson }};
         const PRICE_SLIDER_MAX = {{ price_slider_max }};
         const DISCOUNT_SLIDER_MAX = {{ discount_slider_max }};
 
@@ -130,10 +145,11 @@
         const discountDisplay = document.getElementById("min_discount_display");
         const genreSelect = document.getElementById("genre");
 
-        function updateGenreChip() {
-            document.getElementById("genre_display").textContent =
-                genreSelect.value || "Todos";
-        }
+        const scrapeModal = document.getElementById("scrape-modal");
+        const scrapeMessage = document.getElementById("scrape-message");
+        const scrapePercent = document.getElementById("scrape-percent");
+        const scrapeFill = document.getElementById("scrape-progress-fill");
+        const progressBar = document.querySelector(".progress-bar");
 
         function setRangeFill(slider) {
             const min = parseFloat(slider.min);
@@ -148,7 +164,7 @@
             setRangeFill(priceSlider);
             if (value >= PRICE_SLIDER_MAX) {
                 priceHidden.value = "";
-                priceDisplay.textContent = "Sin límite";
+                priceDisplay.textContent = "No limit";
             } else {
                 priceHidden.value = value;
                 priceDisplay.textContent = value + " €";
@@ -160,7 +176,7 @@
             setRangeFill(discountSlider);
             if (value <= 0) {
                 discountHidden.value = "";
-                discountDisplay.textContent = "Cualquiera";
+                discountDisplay.textContent = "Any";
             } else {
                 discountHidden.value = value;
                 discountDisplay.textContent = value + "%";
@@ -169,11 +185,53 @@
 
         priceSlider.addEventListener("input", updatePriceSlider);
         discountSlider.addEventListener("input", updateDiscountSlider);
-        genreSelect.addEventListener("change", updateGenreChip);
 
         updatePriceSlider();
         updateDiscountSlider();
-        updateGenreChip();
+
+        function showScrapeModal() {
+            scrapeModal.classList.remove("scrape-modal--hidden");
+            document.body.classList.add("modal-open");
+        }
+
+        function updateScrapeUI(percent, message) {
+            scrapeFill.style.width = percent + "%";
+            scrapeMessage.textContent = message;
+            scrapePercent.textContent = percent + "%";
+            progressBar.setAttribute("aria-valuenow", percent);
+        }
+
+        async function pollScrapeStatus() {
+            const response = await fetch("/api/scrape-status");
+            const data = await response.json();
+
+            updateScrapeUI(data.percent || 0, data.message || "Processing...");
+
+            if (data.error) {
+                scrapeMessage.textContent = "Error: " + data.error;
+                return;
+            }
+
+            if (data.done) {
+                updateScrapeUI(100, "Done! Loading deals...");
+                setTimeout(() => window.location.reload(), 600);
+                return;
+            }
+
+            setTimeout(pollScrapeStatus, 500);
+        }
+
+        async function startScraping() {
+            showScrapeModal();
+            updateScrapeUI(0, "Starting download...");
+
+            await fetch("/api/start-scrape", { method: "POST" });
+            pollScrapeStatus();
+        }
+
+        if (NEEDS_SCRAPE) {
+            startScraping();
+        }
     </script>
 </body>
 

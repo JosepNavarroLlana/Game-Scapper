@@ -1,6 +1,7 @@
+import math
 import re
 import time
-from typing import Any
+from typing import Callable
 import requests
 import json
 from pathlib import Path
@@ -12,9 +13,33 @@ CACHE_MAX_AGE_SECONDS = 3600
 
 url = "https://store.steampowered.com/search/results/"
 headers = {"User-Agent": "GameDealsLearner/1.0 (educational project)"}
-age_cookies = {"birthtime": "568022401","lastagecheckage": "1-0-1988","mature_content": "1",}
+age_cookies = {"birthtime": "568022401", "lastagecheckage": "1-0-1988", "mature_content": "1"}
 
-def _parse_precio(element) -> float | None:
+_scrape_progress = {
+    "running": False,
+    "percent": 0,
+    "message": "",
+    "error": None,
+}
+
+ProgressCallback = Callable[[int, str], None]
+
+def get_scrape_progress() -> dict:
+    return dict(_scrape_progress)
+
+def _set_progress(percent: int, message: str) -> None:
+    _scrape_progress["percent"] = percent
+    _scrape_progress["message"] = message
+
+def reset_scrape_progress() -> None:
+    _scrape_progress.update({
+        "running": False,
+        "percent": 0,
+        "message": "",
+        "error": None,
+    })
+
+def _parse_price(element) -> float | None:
     if element is None:
         return None
     text = element.get_text(strip=True)
@@ -39,8 +64,8 @@ def parse_results(html: str) -> list[dict]:
             "title": title_el.get_text(strip=True) if title_el else "",
             "url": row.get("href").split("?")[0],
             "discount_pct": discount_pct,
-            "final_price": _parse_precio(final_price_el),
-            "original_price": _parse_precio(original_price_el),
+            "final_price": _parse_price(final_price_el),
+            "original_price": _parse_price(original_price_el),
             "genres": [],
         })
 
@@ -77,10 +102,18 @@ def clear_cache() -> None:
     if CACHE_FILE.exists():
         CACHE_FILE.unlink()
 
-def fetch_deals(max_games: int = 100) -> list[dict]:
+def fetch_deals(
+    max_games: int = 100,
+    on_progress: ProgressCallback | None = None,
+) -> list[dict]:
     all_games = []
     start = 0
     page_size = 50
+    pages_needed = max(1, math.ceil(max_games / page_size))
+    page_num = 0
+
+    if on_progress:
+        on_progress(2, "Connecting to Steam...")
 
     while len(all_games) < max_games:
         params = {
@@ -100,7 +133,13 @@ def fetch_deals(max_games: int = 100) -> list[dict]:
             break
 
         all_games.extend(batch)
+        page_num += 1
         start += page_size
+
+        if on_progress:
+            pct = min(40, int((page_num / pages_needed) * 40))
+            on_progress(pct, f"Downloading deals ({len(all_games)} games)...")
+
         time.sleep(1)
 
     return all_games[:max_games]
@@ -135,31 +174,65 @@ def fetch_genres(app_id: str) -> list[str]:
 
     return combined
 
-def enrich_with_genres(games: list[dict], limit: int = 50) -> list[dict]:
+def enrich_with_genres(
+    games: list[dict],
+    limit: int = 50,
+    on_progress: ProgressCallback | None = None,
+) -> list[dict]:
+    to_enrich = min(limit, len(games))
+
     for i, game in enumerate(games):
         if i >= limit:
             break
         if game.get("app_id"):
             game["genres"] = fetch_genres(game["app_id"])
             time.sleep(0.5)
+
+            if on_progress and to_enrich > 0:
+                pct = 40 + int(((i + 1) / to_enrich) * 55)
+                on_progress(pct, f"Fetching genres ({i + 1}/{to_enrich})...")
+
     return games
+
+def get_cached_games() -> list[dict] | None:
+    if is_cache_valid():
+        return load_cache()
+    return None
+
+def run_scrape(max_games: int = 50, enrich_limit: int = 50) -> None:
+    if _scrape_progress["running"]:
+        return
+
+    _scrape_progress["running"] = True
+    _scrape_progress["error"] = None
+
+    try:
+        games = fetch_deals(max_games=max_games, on_progress=_set_progress)
+        games = enrich_with_genres(games, limit=enrich_limit, on_progress=_set_progress)
+        _set_progress(98, "Saving data...")
+        save_cache(games)
+        _set_progress(100, "Done!")
+    except Exception as exc:
+        _scrape_progress["error"] = str(exc)
+        _set_progress(0, f"Error: {exc}")
+    finally:
+        _scrape_progress["running"] = False
 
 def get_games(max_games: int = 50, enrich_limit: int = 50) -> list[dict]:
-    if is_cache_valid():
-        print("Usando caché")
-        return load_cache()
+    cached = get_cached_games()
+    if cached is not None:
+        print("Using cache")
+        return cached
 
-    print("Scrapeando Steam...")
-    games = fetch_deals(max_games=max_games)
-    games = enrich_with_genres(games, limit=enrich_limit)
-    save_cache(games)
-    return games
-    
+    print("Scraping Steam...")
+    run_scrape(max_games=max_games, enrich_limit=enrich_limit)
+    return load_cache()
+
 if __name__ == "__main__":
-    print("Descargando ofertas...")
+    print("Downloading deals...")
     games = fetch_deals(max_games=100)
-    print(f"Total: {len(games)} juegos\n")
-    print("Primeros 10 juegos:")
+    print(f"Total: {len(games)} games\n")
+    print("First 10 games:")
 
     for game in games[:10]:
-        print(f"{game['title']} — {game['discount_pct']}% — ${game['final_price']}")
+        print(f"{game['title']} — {game['discount_pct']}% — {game['final_price']}€")

@@ -19,8 +19,8 @@ response.raise_for_status()
 
 data = response.json()
 
-print("¿Exito?", data.get("success"))
-print("Total de resultados:", data.get("total_count"))
+print("Success?", data.get("success"))
+print("Total results:", data.get("total_count"))
 print()
-print("Primeros 300 caracteres del HTML embebido:")
+print("First 300 characters of the embedded HTML:")
 print(data.get("results_html", "")[:300])
