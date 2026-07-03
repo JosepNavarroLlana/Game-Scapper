@@ -1,5 +1,10 @@
 import re
+import time
+import requests
 from bs4 import BeautifulSoup
+
+url = "https://store.steampowered.com/search/results/"
+headers = {"User-Agent": "GameDealsLearner/1.0 (educational project)"}
 
 def _parse_precio(element) -> float | None:
     if element is None:
@@ -33,24 +38,39 @@ def parse_results(html: str) -> list[dict]:
 
     return games
 
+def fetch_deals(max_games: int = 100) -> list[dict]:
+    all_games = []
+    start = 0
+    page_size = 50
+
+    while len(all_games) < max_games:
+        params = {
+            "specials": 1,
+            "start": start,
+            "count": page_size,
+            "infinite": 1,
+        }
+        response = requests.get(url, params=params, headers=headers, timeout=15)
+        response.raise_for_status()
+        data = response.json()
+        if not data.get("success"):
+            break
+
+        batch = parse_results(data["results_html"])
+        if not batch:
+            break
+
+        all_games.extend(batch)
+        start += page_size
+        time.sleep(1)
+
+    return all_games[:max_games]
+
 if __name__ == "__main__":
-    import requests
+    print("Descargando ofertas...")
+    games = fetch_deals(max_games=100)
+    print(f"Total: {len(games)} juegos\n")
+    print("Primeros 10 juegos:")
 
-    url = "https://store.steampowered.com/search/results/"
-    params = {"specials": 1, "start": 0, "count": 5, "infinite": 1}
-    headers = {"User-Agent": "GameDealsLearner/1.0 (educational project)"}
-
-    response = requests.get(url, params=params, headers=headers, timeout=15)
-    response.raise_for_status()
-
-    data = response.json()
-    games = parse_results(data["results_html"])
-
-    print(f"Juegos encontrados: {len(games)}\n")
-
-    for game in games:
-        print(f"{game['title']}")
-        print(f"  Descuento: {game['discount_pct']}%")
-        print(f"  Precio: ${game['original_price']} → ${game['final_price']}")
-        print(f"  URL: {game['url']}")
-        print()
+    for game in games[:10]:
+        print(f"{game['title']} — {game['discount_pct']}% — ${game['final_price']}")
