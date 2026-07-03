@@ -416,28 +416,30 @@ tbody tr:last-child td {
     border-bottom: none;
 }
 
-tbody tr:hover {
-    background: var(--phosphor);
-}
+@media (hover: hover) and (pointer: fine) {
+    tbody tr:hover {
+        background: var(--phosphor);
+    }
 
-tbody tr:hover td,
-tbody tr:hover .game-link,
-tbody tr:hover .genres,
-tbody tr:hover .price-original,
-tbody tr:hover .price-final {
-    color: var(--crt-bg);
-    text-shadow: none;
-}
+    tbody tr:hover td,
+    tbody tr:hover .game-link,
+    tbody tr:hover .genres,
+    tbody tr:hover .price-original,
+    tbody tr:hover .price-final {
+        color: var(--crt-bg);
+        text-shadow: none;
+    }
 
-tbody tr:hover .discount-pill {
-    background: var(--crt-bg);
-    color: var(--phosphor);
-    border-color: var(--crt-bg);
-}
+    tbody tr:hover .discount-pill {
+        background: var(--crt-bg);
+        color: var(--phosphor);
+        border-color: var(--crt-bg);
+    }
 
-tbody tr:hover .badge {
-    background: var(--crt-bg);
-    color: var(--amber);
+    tbody tr:hover .badge {
+        background: var(--crt-bg);
+        color: var(--amber);
+    }
 }
 
 .game-link {
@@ -652,19 +654,63 @@ body.modal-open {
 
 @media (max-width: 768px) {
     body {
-        font-size: 1.15rem;
+        font-size: 1.1rem;
     }
 
     .page {
-        padding: 1.25rem 1rem 2.5rem;
+        padding: 1rem max(0.85rem, env(safe-area-inset-right)) 2.5rem max(0.85rem, env(safe-area-inset-left));
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.85rem;
     }
 
     .header h1 {
-        font-size: 1rem;
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+
+    .stats {
+        font-size: 1.15rem;
+    }
+
+    .refresh-btn {
+        text-align: center;
+        padding: 0.65rem 1rem;
+    }
+
+    .filters {
+        padding: 0.85rem 0.9rem 1rem;
+    }
+
+    .filters-title {
+        font-size: 0.5rem;
+        letter-spacing: 0.1em;
     }
 
     .filters-grid {
         grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .filter-field {
+        min-height: auto;
+        padding: 0.55rem 0.75rem 0.45rem;
+    }
+
+    .filter-header {
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .filter-label {
+        font-size: 0.95rem;
+    }
+
+    .filter-chip {
+        font-size: 1rem;
     }
 
     .filter-btn {
@@ -673,15 +719,180 @@ body.modal-open {
         padding: 0.85rem 1.25rem;
     }
 
+    .range-input {
+        height: 16px;
+    }
+
+    .range-input::-webkit-slider-thumb {
+        width: 12px;
+        height: 28px;
+        margin-top: -6px;
+    }
+
+    .range-input::-moz-range-thumb {
+        width: 12px;
+        height: 28px;
+    }
+
     .table-wrap {
-        overflow-x: auto;
+        overflow: visible;
+        border: none;
+        background: transparent;
+        box-shadow: none;
     }
 
-    table {
-        min-width: 620px;
+    table,
+    tbody {
+        display: block;
+        width: 100%;
+        min-width: 0;
     }
 
-    .genres {
-        max-width: 150px;
+    thead {
+        display: none;
+    }
+
+    tbody tr {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-areas:
+            "title title title"
+            "genre genre genre"
+            "discount original final";
+        gap: 0;
+        border: 1px solid var(--phosphor-dark);
+        background: var(--crt-panel);
+        box-shadow: inset 0 0 20px rgba(109, 255, 78, 0.04);
+        margin-bottom: 0.85rem;
+        padding: 0.85rem 0.9rem 0.75rem;
+    }
+
+    tbody tr.best-deal {
+        border-color: var(--amber-dim);
+        box-shadow: inset 0 0 20px rgba(255, 179, 71, 0.06);
+    }
+
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    td {
+        display: block;
+        border: none;
+        padding: 0;
+    }
+
+    td[data-label="Game"] {
+        grid-area: title;
+        padding-bottom: 0.6rem;
+        margin-bottom: 0.5rem;
+        border-bottom: 1px dashed var(--phosphor-dark);
+    }
+
+    td[data-label="Genre"] {
+        grid-area: genre;
+        max-width: none;
+        font-size: 1rem;
+        padding-bottom: 0.65rem;
+        margin-bottom: 0.55rem;
+        border-bottom: 1px dashed var(--phosphor-dark);
+    }
+
+    td[data-label="Genre"]::before {
+        content: attr(data-label);
+        display: block;
+        font-family: var(--font-pixel);
+        font-size: 0.42rem;
+        color: var(--amber);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 0.3rem;
+        text-shadow: var(--glow-amber);
+    }
+
+    td[data-label="Discount"],
+    td[data-label="Original price"],
+    td[data-label="Final price"] {
+        text-align: center;
+        padding-top: 0.15rem;
+    }
+
+    td[data-label="Discount"] {
+        grid-area: discount;
+    }
+
+    td[data-label="Original price"] {
+        grid-area: original;
+    }
+
+    td[data-label="Final price"] {
+        grid-area: final;
+    }
+
+    td[data-label="Discount"]::before,
+    td[data-label="Original price"]::before,
+    td[data-label="Final price"]::before {
+        content: attr(data-label);
+        display: block;
+        font-family: var(--font-pixel);
+        font-size: 0.38rem;
+        color: var(--amber);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.35rem;
+        text-shadow: var(--glow-amber);
+        line-height: 1.4;
+    }
+
+    .game-link {
+        display: inline;
+        word-break: break-word;
+    }
+
+    .badge {
+        display: inline-block;
+        margin: 0.4rem 0 0;
+        font-size: 0.9rem;
+    }
+
+    .discount-pill {
+        font-size: 1.1rem;
+        min-width: 0;
+    }
+
+    .price-original {
+        font-size: 1rem;
+    }
+
+    .price-final {
+        font-size: 1.2rem;
+    }
+
+    .best-deal td {
+        background: transparent;
+    }
+
+    .scrape-modal {
+        padding: 1rem;
+        align-items: flex-end;
+    }
+
+    .scrape-modal__box {
+        width: 100%;
+        padding: 1.25rem 1rem 1.5rem;
+        border-radius: 0;
+    }
+
+    .scrape-modal__title {
+        font-size: 0.65rem;
+    }
+
+    .scrape-modal__message {
+        font-size: 1.15rem;
+    }
+
+    .scrape-modal__hint {
+        font-size: 0.95rem;
+        line-height: 1.3;
     }
 }

@@ -96,16 +96,16 @@
                 <tbody>
                     {% for game in games %}
                     <tr class="{% if game.is_best_deal %}best-deal{% endif %}">
-                        <td>
+                        <td data-label="Game">
                             <a href="{{ game.url }}" target="_blank" class="game-link">{{ game.title }}</a>
                             {% if game.is_best_deal %}
                             <span class="badge">Best deal</span>
                             {% endif %}
                         </td>
-                        <td class="genres">{{ game.genres | join(", ") or "—" }}</td>
-                        <td><span class="discount-pill">-{{ game.discount_pct }}%</span></td>
-                        <td class="price-original">{{ game.original_price }}€</td>
-                        <td class="price-final">{{ game.final_price }}€</td>
+                        <td data-label="Genre" class="genres">{{ game.genres | join(", ") or "—" }}</td>
+                        <td data-label="Discount"><span class="discount-pill">-{{ game.discount_pct }}%</span></td>
+                        <td data-label="Original price" class="price-original">{{ game.original_price }}€</td>
+                        <td data-label="Final price" class="price-final">{{ game.final_price }}€</td>
                     </tr>
                     {% endfor %}
                 </tbody>
