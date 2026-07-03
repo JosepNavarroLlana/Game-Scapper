@@ -1,0 +1,40 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #1b1b1b;
+    color: #eee;
+    padding: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th {
+    background: #333;
+    text-align: left;
+}
+
+td, th {
+    padding: 10px;
+    border: 1px solid #444;
+}
+
+a {
+    color: #66c0f4;
+}
+
+.best-deal {
+    background: #1a3d1a;
+    border-left: 4px solid #4caf50;
+}
+
+.badge {
+    background: #4caf50;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-left: 8px;
+}

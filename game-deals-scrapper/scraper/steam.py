@@ -1,5 +1,6 @@
 import re
 import time
+from typing import Any
 import requests
 from bs4 import BeautifulSoup
 
@@ -66,6 +67,26 @@ def fetch_deals(max_games: int = 100) -> list[dict]:
 
     return all_games[:max_games]
 
+def fetch_genres(app_id: str) -> list[str]:
+    game_url = f"https://store.steampowered.com/app/{app_id}/"
+    response = requests.get(game_url, headers=headers, timeout=15)
+    response.raise_for_status()
+
+    soup = BeautifulSoup(response.text, "lxml")
+    tags = soup.select("a.app_tag")
+
+    return [tag.get_text(strip=True) for tag in tags[:5]]
+
+def enrich_with_genres(games: list[dict], limit: int = 30) -> list[dict]:
+    for i, game in enumerate(games):
+        if i >= limit:
+            break
+        if game.get("app_id"):
+            game["genres"] = fetch_genres(game["app_id"])
+            time.sleep(0.5)
+    return games
+
+    
 if __name__ == "__main__":
     print("Descargando ofertas...")
     games = fetch_deals(max_games=100)

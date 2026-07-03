@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Game Deals</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <h1>Ofertas de Steam</h1>
+    <p>{{ games|length }} juegos encontrados</p>
+
+
+
+    <form method="get" action="/">
+        <label for="genre">Género:</label>
+        <select name="genre" id="genre">
+            <option value="">Todos</option>
+            <option value="Action" {% if genre=="Action" %}selected{% endif %}>Action</option>
+            <option value="RPG" {% if genre=="RPG" %}selected{% endif %}>RPG</option>
+            <option value="Indie" {% if genre=="Indie" %}selected{% endif %}>Indie</option>
+            <option value="Horror" {% if genre=="Horror" %}selected{% endif %}>Horror</option>
+            <option value="Strategy" {% if genre=="Strategy" %}selected{% endif %}>Strategy</option>
+            <option value="Adventure" {% if genre=="Adventure" %}selected{% endif %}>Adventure</option>
+        </select>
+        <label for="max_price">Precio máximo:</label>
+        <input type="number" name="max_price" value="{{ max_price if max_price is not none else '' }}" step="0.01">
+        <label for="min_discount">Descuento mínimo:</label>
+        <input type="number" name="min_discount" value="{{ min_discount if min_discount is not none else '' }}" min="0"
+            max="100" step="1">
+        <button type="submit">Filtrar</button>
+    </form>
+    <table border="1" cellpadding="8">
+        <tr>
+            <th>Juego</th>
+            <th>Genero</th>
+            <th>Descuento</th>
+            <th>Precio original</th>
+            <th>Precio final</th>
+        </tr>
+        {% for game in games %}
+        <tr class="{% if game.is_best_deal %}best-deal{% endif %}">
+            <td>
+                <a href="{{ game.url }}" target="_blank">{{ game.title }}</a>
+                {% if game.is_best_deal %}
+                    <span class="badge">Buena oferta</span>
+                {% endif %}
+            </td>
+            <td>{{ game.genres | join(", ") }}</td>
+            <td>{{ game.discount_pct }}%</td>
+            <td>${{ game.original_price }}</td>
+            <td>${{ game.final_price }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+
+</html>
