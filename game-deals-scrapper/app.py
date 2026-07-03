@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request
-from scraper.steam import enrich_with_genres, fetch_deals
+from flask import Flask, render_template, request, redirect, url_for
+from scraper.steam import get_games,clear_cache
 
 app = Flask(__name__)
 
@@ -11,8 +11,7 @@ def dashboard():
     max_price = request.args.get("max_price", type=float)
     min_discount = request.args.get("min_discount", type=int)
 
-    games = fetch_deals(max_games=50)
-    games = enrich_with_genres(games, limit=30)
+    games = get_games(max_games=50, enrich_limit=50)
 
     genre = request.args.get("genre", "")
 
@@ -31,6 +30,10 @@ def dashboard():
         game["is_best_deal"] = is_best_deal(game)    
 
     return render_template("dashboard.html", games=games, max_price=max_price, min_discount=min_discount, genre=genre,)
-
+@app.route("/refresh")
+def refresh():
+    clear_cache()
+    return redirect(url_for("dashboard"))
+    
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

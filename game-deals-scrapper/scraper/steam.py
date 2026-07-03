@@ -2,7 +2,13 @@ import re
 import time
 from typing import Any
 import requests
+import json
+from pathlib import Path
+from datetime import datetime, timezone
 from bs4 import BeautifulSoup
+
+CACHE_FILE = Path(__file__).resolve().parent.parent / "data" / "deals_cache.json"
+CACHE_MAX_AGE_SECONDS = 3600
 
 url = "https://store.steampowered.com/search/results/"
 headers = {"User-Agent": "GameDealsLearner/1.0 (educational project)"}
@@ -38,6 +44,37 @@ def parse_results(html: str) -> list[dict]:
         })
 
     return games
+
+def save_cache(games: list[dict]) -> None:
+    CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    data = {
+        "cached_at": datetime.now(timezone.utc).isoformat(),
+        "games": games,
+    }
+    with open(CACHE_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def is_cache_valid() -> bool:
+    if not CACHE_FILE.exists():
+        return False
+
+    try:
+        with open(CACHE_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        cached_at = datetime.fromisoformat(data["cached_at"])
+        age_seconds = (datetime.now(timezone.utc) - cached_at).total_seconds()
+        return age_seconds < CACHE_MAX_AGE_SECONDS
+    except (json.JSONDecodeError, KeyError, ValueError):
+        return False
+
+def load_cache() -> list[dict]:
+    with open(CACHE_FILE, encoding="utf-8") as f:
+        data = json.load(f)
+    return data["games"]
+
+def clear_cache() -> None:
+    if CACHE_FILE.exists():
+        CACHE_FILE.unlink()
 
 def fetch_deals(max_games: int = 100) -> list[dict]:
     all_games = []
@@ -77,7 +114,7 @@ def fetch_genres(app_id: str) -> list[str]:
 
     return [tag.get_text(strip=True) for tag in tags[:5]]
 
-def enrich_with_genres(games: list[dict], limit: int = 30) -> list[dict]:
+def enrich_with_genres(games: list[dict], limit: int = 50) -> list[dict]:
     for i, game in enumerate(games):
         if i >= limit:
             break
@@ -86,6 +123,16 @@ def enrich_with_genres(games: list[dict], limit: int = 30) -> list[dict]:
             time.sleep(0.5)
     return games
 
+def get_games(max_games: int = 50, enrich_limit: int = 50) -> list[dict]:
+    if is_cache_valid():
+        print("Usando caché")
+        return load_cache()
+
+    print("Scrapeando Steam...")
+    games = fetch_deals(max_games=max_games)
+    games = enrich_with_genres(games, limit=enrich_limit)
+    save_cache(games)
+    return games
     
 if __name__ == "__main__":
     print("Descargando ofertas...")

@@ -10,8 +10,7 @@
 <body>
     <h1>Ofertas de Steam</h1>
     <p>{{ games|length }} juegos encontrados</p>
-
-
+    <a href="{{ url_for('refresh') }}" class="refresh-btn">Actualizar datos</a>
 
     <form method="get" action="/">
         <label for="genre">Género:</label>
@@ -44,13 +43,13 @@
             <td>
                 <a href="{{ game.url }}" target="_blank">{{ game.title }}</a>
                 {% if game.is_best_deal %}
-                    <span class="badge">Buena oferta</span>
+                <span class="badge">Buena oferta</span>
                 {% endif %}
             </td>
             <td>{{ game.genres | join(", ") }}</td>
             <td>{{ game.discount_pct }}%</td>
-            <td>${{ game.original_price }}</td>
-            <td>${{ game.final_price }}</td>
+            <td>{{ game.original_price }}€</td>
+            <td>{{ game.final_price }}€</td>
         </tr>
         {% endfor %}
     </table>
