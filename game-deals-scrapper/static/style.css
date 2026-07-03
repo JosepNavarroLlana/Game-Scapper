@@ -475,10 +475,12 @@ tbody tr:last-child td {
 }
 
 .price-original {
-    color: var(--phosphor-dark);
+    color: var(--phosphor-dim);
     text-decoration: line-through;
-    font-size: 1.1rem;
+    text-decoration-color: rgba(109, 255, 78, 0.5);
+    font-size: 1.15rem;
     text-shadow: none;
+    opacity: 0.9;
 }
 
 .price-final {
@@ -861,7 +863,8 @@ body.modal-open {
     }
 
     .price-original {
-        font-size: 1rem;
+        font-size: 1.05rem;
+        opacity: 1;
     }
 
     .price-final {
