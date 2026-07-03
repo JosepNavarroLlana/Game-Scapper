@@ -98,6 +98,3 @@ To deploy your own instance:
 
 This is an educational project built for learning web scraping and Flask. It respects rate limits with delays between requests. Steam's terms of service and robots policies should be reviewed before any production use.
 
-## License
-
-MIT
