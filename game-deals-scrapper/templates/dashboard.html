@@ -3,56 +3,178 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Game Deals</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Deals - Steam</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
-    <h1>Ofertas de Steam</h1>
-    <p>{{ games|length }} juegos encontrados</p>
-    <a href="{{ url_for('refresh') }}" class="refresh-btn">Actualizar datos</a>
+    <div class="page">
 
-    <form method="get" action="/">
-        <label for="genre">Género:</label>
-        <select name="genre" id="genre">
-            <option value="">Todos</option>
-            <option value="Action" {% if genre=="Action" %}selected{% endif %}>Action</option>
-            <option value="RPG" {% if genre=="RPG" %}selected{% endif %}>RPG</option>
-            <option value="Indie" {% if genre=="Indie" %}selected{% endif %}>Indie</option>
-            <option value="Horror" {% if genre=="Horror" %}selected{% endif %}>Horror</option>
-            <option value="Strategy" {% if genre=="Strategy" %}selected{% endif %}>Strategy</option>
-            <option value="Adventure" {% if genre=="Adventure" %}selected{% endif %}>Adventure</option>
-        </select>
-        <label for="max_price">Precio máximo:</label>
-        <input type="number" name="max_price" value="{{ max_price if max_price is not none else '' }}" step="0.01">
-        <label for="min_discount">Descuento mínimo:</label>
-        <input type="number" name="min_discount" value="{{ min_discount if min_discount is not none else '' }}" min="0"
-            max="100" step="1">
-        <button type="submit">Filtrar</button>
-    </form>
-    <table border="1" cellpadding="8">
-        <tr>
-            <th>Juego</th>
-            <th>Genero</th>
-            <th>Descuento</th>
-            <th>Precio original</th>
-            <th>Precio final</th>
-        </tr>
-        {% for game in games %}
-        <tr class="{% if game.is_best_deal %}best-deal{% endif %}">
-            <td>
-                <a href="{{ game.url }}" target="_blank">{{ game.title }}</a>
-                {% if game.is_best_deal %}
-                <span class="badge">Buena oferta</span>
-                {% endif %}
-            </td>
-            <td>{{ game.genres | join(", ") }}</td>
-            <td>{{ game.discount_pct }}%</td>
-            <td>{{ game.original_price }}€</td>
-            <td>{{ game.final_price }}€</td>
-        </tr>
-        {% endfor %}
-    </table>
+        <header class="header">
+            <div>
+                <h1><span>Game</span> Deals</h1>
+                <p class="stats"><strong>{{ games|length }}</strong> ofertas encontradas</p>
+            </div>
+            <a href="{{ url_for('refresh') }}" class="refresh-btn">↻ Actualizar datos</a>
+        </header>
+
+        <section class="filters">
+            <p class="filters-title">Filtros</p>
+            <form method="get" action="/">
+                <div class="filters-grid">
+                    <div class="field filter-field">
+                        <div class="filter-header">
+                            <span class="filter-label">Género</span>
+                        </div>
+                        <div class="filter-body">
+                            <select name="genre" id="genre">
+                                <option value="">Todos</option>
+                                <option value="Action" {% if genre == "Action" %}selected{% endif %}>Action</option>
+                                <option value="RPG" {% if genre == "RPG" %}selected{% endif %}>RPG</option>
+                                <option value="Indie" {% if genre == "Indie" %}selected{% endif %}>Indie</option>
+                                <option value="Horror" {% if genre == "Horror" %}selected{% endif %}>Horror</option>
+                                <option value="Strategy" {% if genre == "Strategy" %}selected{% endif %}>Strategy</option>
+                                <option value="Adventure" {% if genre == "Adventure" %}selected{% endif %}>Adventure</option>
+                            </select>
+                        </div>
+                        <div class="filter-bounds filter-bounds--placeholder" aria-hidden="true">
+                            <span>—</span><span>—</span>
+                        </div>
+                    </div>
+                    <div class="field filter-field">
+                        <div class="filter-header">
+                            <span class="filter-label">Precio máximo</span>
+                            <span id="max_price_display" class="filter-chip filter-chip--price">Sin límite</span>
+                        </div>
+                        <div class="filter-body">
+                            <input type="range" id="max_price_slider" class="range-input range-input--price"
+                                min="0" max="{{ price_slider_max }}" step="1"
+                                value="{{ max_price if max_price is not none else price_slider_max }}">
+                        </div>
+                        <div class="filter-bounds">
+                            <span>0 €</span>
+                            <span>{{ price_slider_max }} €</span>
+                        </div>
+                        <input type="hidden" name="max_price" id="max_price"
+                            value="{{ max_price if max_price is not none else '' }}">
+                    </div>
+                    <div class="field filter-field">
+                        <div class="filter-header">
+                            <span class="filter-label">Descuento mínimo</span>
+                            <span id="min_discount_display" class="filter-chip filter-chip--deal">Cualquiera</span>
+                        </div>
+                        <div class="filter-body">
+                            <input type="range" id="min_discount_slider" class="range-input range-input--discount"
+                                min="0" max="{{ discount_slider_max }}" step="5"
+                                value="{{ min_discount if min_discount is not none else 0 }}">
+                        </div>
+                        <div class="filter-bounds">
+                            <span>0%</span>
+                            <span>{{ discount_slider_max }}%</span>
+                        </div>
+                        <input type="hidden" name="min_discount" id="min_discount"
+                            value="{{ min_discount if min_discount is not none else '' }}">
+                    </div>
+                    <button type="submit" class="filter-btn">Filtrar</button>
+                </div>
+            </form>
+        </section>
+
+        <div class="table-wrap">
+            {% if games %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Juego</th>
+                        <th>Género</th>
+                        <th>Descuento</th>
+                        <th>Precio original</th>
+                        <th>Precio final</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for game in games %}
+                    <tr class="{% if game.is_best_deal %}best-deal{% endif %}">
+                        <td>
+                            <a href="{{ game.url }}" target="_blank" class="game-link">{{ game.title }}</a>
+                            {% if game.is_best_deal %}
+                            <span class="badge">Buena oferta</span>
+                            {% endif %}
+                        </td>
+                        <td class="genres">{{ game.genres | join(", ") or "—" }}</td>
+                        <td><span class="discount-pill">-{{ game.discount_pct }}%</span></td>
+                        <td class="price-original">{{ game.original_price }}€</td>
+                        <td class="price-final">{{ game.final_price }}€</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty">No hay juegos que coincidan con los filtros.</p>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <script>
+        const PRICE_SLIDER_MAX = {{ price_slider_max }};
+        const DISCOUNT_SLIDER_MAX = {{ discount_slider_max }};
+
+        const priceSlider = document.getElementById("max_price_slider");
+        const priceHidden = document.getElementById("max_price");
+        const priceDisplay = document.getElementById("max_price_display");
+
+        const discountSlider = document.getElementById("min_discount_slider");
+        const discountHidden = document.getElementById("min_discount");
+        const discountDisplay = document.getElementById("min_discount_display");
+        const genreSelect = document.getElementById("genre");
+
+        function updateGenreChip() {
+            document.getElementById("genre_display").textContent =
+                genreSelect.value || "Todos";
+        }
+
+        function setRangeFill(slider) {
+            const min = parseFloat(slider.min);
+            const max = parseFloat(slider.max);
+            const value = parseFloat(slider.value);
+            const pct = ((value - min) / (max - min)) * 100;
+            slider.style.setProperty("--fill", pct + "%");
+        }
+
+        function updatePriceSlider() {
+            const value = parseInt(priceSlider.value, 10);
+            setRangeFill(priceSlider);
+            if (value >= PRICE_SLIDER_MAX) {
+                priceHidden.value = "";
+                priceDisplay.textContent = "Sin límite";
+            } else {
+                priceHidden.value = value;
+                priceDisplay.textContent = value + " €";
+            }
+        }
+
+        function updateDiscountSlider() {
+            const value = parseInt(discountSlider.value, 10);
+            setRangeFill(discountSlider);
+            if (value <= 0) {
+                discountHidden.value = "";
+                discountDisplay.textContent = "Cualquiera";
+            } else {
+                discountHidden.value = value;
+                discountDisplay.textContent = value + "%";
+            }
+        }
+
+        priceSlider.addEventListener("input", updatePriceSlider);
+        discountSlider.addEventListener("input", updateDiscountSlider);
+        genreSelect.addEventListener("change", updateGenreChip);
+
+        updatePriceSlider();
+        updateDiscountSlider();
+        updateGenreChip();
+    </script>
 </body>
 
 </html>

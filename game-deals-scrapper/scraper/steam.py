@@ -12,6 +12,7 @@ CACHE_MAX_AGE_SECONDS = 3600
 
 url = "https://store.steampowered.com/search/results/"
 headers = {"User-Agent": "GameDealsLearner/1.0 (educational project)"}
+age_cookies = {"birthtime": "568022401","lastagecheckage": "1-0-1988","mature_content": "1",}
 
 def _parse_precio(element) -> float | None:
     if element is None:
@@ -106,13 +107,33 @@ def fetch_deals(max_games: int = 100) -> list[dict]:
 
 def fetch_genres(app_id: str) -> list[str]:
     game_url = f"https://store.steampowered.com/app/{app_id}/"
-    response = requests.get(game_url, headers=headers, timeout=15)
+    response = requests.get(
+        game_url,
+        headers=headers,
+        cookies=age_cookies,
+        timeout=15,
+    )
     response.raise_for_status()
 
     soup = BeautifulSoup(response.text, "lxml")
-    tags = soup.select("a.app_tag")
 
-    return [tag.get_text(strip=True) for tag in tags[:5]]
+    official = [
+        a.get_text(strip=True)
+        for a in soup.select('div#genresAndManufacturer a[href*="/genre/"]')
+    ]
+    tags = [tag.get_text(strip=True) for tag in soup.select("a.app_tag")]
+
+    combined = []
+    seen = set()
+    for label in official + tags:
+        key = label.lower()
+        if key not in seen:
+            seen.add(key)
+            combined.append(label)
+        if len(combined) >= 8:
+            break
+
+    return combined
 
 def enrich_with_genres(games: list[dict], limit: int = 50) -> list[dict]:
     for i, game in enumerate(games):

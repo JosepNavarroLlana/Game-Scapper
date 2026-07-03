@@ -1,54 +1,471 @@
+@import url("https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700&family=Source+Sans+3:wght@400;600&display=swap");
+
+:root {
+    --bg-deep: #0e1419;
+    --bg-panel: #1b2838;
+    --bg-panel-hover: #223040;
+    --bg-input: #16202d;
+    --border: #2a475e;
+    --border-soft: #1f3448;
+    --text: #c7d5e0;
+    --text-muted: #8f98a0;
+    --accent: #66c0f4;
+    --accent-hover: #8ed4ff;
+    --discount: #4c6b22;
+    --discount-bg: #283d19;
+    --deal: #59bf40;
+    --deal-bg: #1a3d1a;
+    --price-original: #626366;
+    --radius: 6px;
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+* {
+    box-sizing: border-box;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    background: #1b1b1b;
-    color: #eee;
-    padding: 20px;
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Source Sans 3", "Segoe UI", sans-serif;
+    background:
+        radial-gradient(ellipse at 20% 0%, rgba(42, 71, 94, 0.35) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 100%, rgba(76, 107, 34, 0.12) 0%, transparent 50%),
+        var(--bg-deep);
+    color: var(--text);
+    line-height: 1.5;
+}
+
+.page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 3rem;
+}
+
+/* ── Header ── */
+.header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.header h1 {
+    margin: 0;
+    font-family: "Oxanium", sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #fff;
+}
+
+.header h1 span {
+    color: var(--accent);
+}
+
+.stats {
+    margin: 0.35rem 0 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.stats strong {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: linear-gradient(180deg, #75b022 0%, #588a1b 100%);
+    color: #d2efa9;
+    padding: 0.55rem 1.1rem;
+    border-radius: var(--radius);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid #4c6b22;
+    transition: filter 0.15s, transform 0.15s;
+}
+
+.refresh-btn:hover {
+    filter: brightness(1.12);
+    transform: translateY(-1px);
+}
+
+/* ── Filters ── */
+.filters {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.filters-title {
+    margin: 0 0 1rem;
+    font-family: "Oxanium", sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr 1.4fr auto;
+    gap: 1.25rem;
+    align-items: stretch;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Filter boxes (shared) ── */
+.filter-field {
+    background: var(--bg-input);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem 0.6rem;
+    min-height: 6.5rem;
+}
+
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.65rem;
+}
+
+.filter-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.filter-chip {
+    font-family: "Oxanium", sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text);
+    background: rgba(199, 213, 224, 0.1);
+    border: 1px solid rgba(199, 213, 224, 0.25);
+    padding: 0.15rem 0.55rem;
+    border-radius: 3px;
+}
+
+.filter-chip--price {
+    color: var(--accent);
+    background: rgba(102, 192, 244, 0.12);
+    border-color: rgba(102, 192, 244, 0.35);
+}
+
+.filter-chip--deal {
+    color: #beee11;
+    background: rgba(190, 238, 17, 0.1);
+    border-color: rgba(190, 238, 17, 0.35);
+}
+
+.filter-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0.35rem 0;
+}
+
+.filter-field select {
+    width: 100%;
+    background: #0e1419;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s;
+}
+
+.filter-field select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.filter-bounds {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.35rem;
+    font-size: 0.7rem;
+    color: #5a6a78;
+    min-height: 1rem;
+}
+
+/* ── Range sliders ── */
+.range-input {
+    --fill: 100%;
+    width: 100%;
+    height: 4px;
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.range-input--price {
+    --thumb-color: #66c0f4;
+    --track-fill: #2a5f7a;
+}
+
+.range-input--discount {
+    --thumb-color: #beee11;
+    --track-fill: #4c6b22;
+}
+
+.range-input::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(
+        to right,
+        var(--track-fill) 0%,
+        var(--track-fill) var(--fill),
+        #2a3a4a var(--fill),
+        #2a3a4a 100%
+    );
+}
+
+.range-input::-moz-range-track {
+    height: 4px;
+    border-radius: 2px;
+    background: #2a3a4a;
+}
+
+.range-input::-moz-range-progress {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--track-fill);
+}
+
+.range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    margin-top: -5px;
+    border-radius: 2px;
+    background: var(--thumb-color);
+    border: none;
+    box-shadow: 0 0 0 2px #0e1419, 0 2px 6px rgba(0, 0, 0, 0.5);
+    transition: transform 0.1s;
+}
+
+.range-input::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--thumb-color);
+    border: none;
+    box-shadow: 0 0 0 2px #0e1419, 0 2px 6px rgba(0, 0, 0, 0.5);
+    transition: transform 0.1s;
+}
+
+.range-input:hover::-webkit-slider-thumb,
+.range-input:active::-webkit-slider-thumb {
+    transform: scale(1.15);
+}
+
+.range-input:hover::-moz-range-thumb,
+.range-input:active::-moz-range-thumb {
+    transform: scale(1.15);
+}
+
+.filter-bounds--placeholder {
+    visibility: hidden;
+}
+
+.filter-btn {
+    background: linear-gradient(180deg, #47bfff 0%, #2a7eb8 100%);
+    color: #fff;
+    border: 1px solid #1a5a82;
+    border-radius: var(--radius);
+    padding: 0 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.15s;
+    align-self: stretch;
+    min-height: 6.5rem;
+}
+
+.filter-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+/* ── Table ── */
+.table-wrap {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
+}
+
+thead {
+    background: #171d25;
 }
 
 th {
-    background: #333;
+    padding: 0.85rem 1rem;
     text-align: left;
+    font-family: "Oxanium", sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
 }
 
-td, th {
-    padding: 10px;
-    border: 1px solid #444;
+td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--border-soft);
+    vertical-align: middle;
 }
 
-a {
-    color: #66c0f4;
+tbody tr {
+    transition: background 0.12s;
 }
 
+tbody tr:hover {
+    background: var(--bg-panel-hover);
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Game title */
+.game-link {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.12s;
+}
+
+.game-link:hover {
+    color: var(--accent);
+}
+
+.genres {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    max-width: 220px;
+    line-height: 1.4;
+}
+
+/* Discount pill */
+.discount-pill {
+    display: inline-block;
+    background: var(--discount-bg);
+    color: #beee11;
+    font-family: "Oxanium", sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 3px;
+    border: 1px solid var(--discount);
+    min-width: 3rem;
+    text-align: center;
+}
+
+/* Prices */
+.price-original {
+    color: var(--price-original);
+    text-decoration: line-through;
+    font-size: 0.88rem;
+}
+
+.price-final {
+    color: #beee11;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+/* Best deal row */
 .best-deal {
-    background: #1a3d1a;
-    border-left: 4px solid #4caf50;
+    background: rgba(26, 61, 26, 0.45);
+    box-shadow: inset 3px 0 0 var(--deal);
+}
+
+.best-deal:hover {
+    background: rgba(26, 61, 26, 0.6) !important;
 }
 
 .badge {
-    background: #4caf50;
-    color: white;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    margin-left: 8px;
-}
-
-.refresh-btn {
     display: inline-block;
-    background: #66c0f4;
-    color: #1b1b1b;
-    padding: 8px 16px;
-    border-radius: 4px;
-    text-decoration: none;
-    margin-bottom: 16px;
+    background: linear-gradient(180deg, #59bf40 0%, #3d8a2a 100%);
+    color: #fff;
+    padding: 0.15rem 0.55rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-left: 0.5rem;
+    vertical-align: middle;
 }
 
-.refresh-btn:hover {
-    background: #8ed4ff;
+/* Empty state */
+.empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .page {
+        padding: 1.25rem 1rem 2rem;
+    }
+
+    .header h1 {
+        font-size: 1.35rem;
+    }
+
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-btn {
+        width: 100%;
+    }
+
+    .table-wrap {
+        overflow-x: auto;
+    }
+
+    table {
+        min-width: 600px;
+    }
+
+    .genres {
+        max-width: 140px;
+    }
 }
