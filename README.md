@@ -2,9 +2,9 @@
 
 A Flask web app that scrapes Steam game deals and displays them in a retro arcade-style dashboard with filters, best-deal highlighting, and live scraping progress.
 
-**[Live Demo](https://game-deals-scraper-tjuw.onrender.com/)** · [Source Code](https://github.com/JosepNavarroLlana/Game-Scapper)
+**[Live Demo](https://game-deals-scraper-tjuw.onrender.com/)**
 
-![Dashboard screenshot](docs/screenshot.png)
+![Dashboard screenshot](game-deals-scrapper/docs/screenshot.png)
 
 ## Features
 
